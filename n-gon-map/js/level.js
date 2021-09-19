@@ -2499,6 +2499,7 @@ const level = {
             level.exit.draw();
             // level.enter.draw();
             level.playerExitCheck();
+			level.rotor1.rotate()
         };
 
         level.customTopLayer = () => {
@@ -2506,8 +2507,8 @@ const level = {
 
         level.setPosToSpawn(460, -100); //normal spawn
         // level.enter.x = -1000000; //hide enter graphic for first level by moving to the far left
-        level.exit.x = 2800;
-        level.exit.y = -335;
+        level.exit.x = 4600;
+        level.exit.y = -2100;
         spawn.mapRect(level.exit.x, level.exit.y + 25, 100, 100); //exit bump
         simulation.zoomScale = 1000 //1400 is normal
         level.defaultZoom = 1600
@@ -2517,8 +2518,11 @@ const level = {
         spawn.mapRect(410, -10, 90, 20); //small platform for player
 		spawn.mapRect(1211, -10, 90, 20);
 		//spawn.mapRect(1211, -390, 90, 20);
-		spawn.mapRect(1811, -900, 90, 900);
 		spawn.mapRect(1511, -600, 90, 20);
+		spawn.mapRect(1811, -900, 90, 900);
+		spawn.mapRect(2211, -1400, 90, 500);
+		level.rotor1 = level.rotor(3200, -1350, 0.001)
+		spawn.mapRect(3711, -2000, 90, 20);
 	},
     testChamber() {
         level.setPosToSpawn(0, -50); //lower start
