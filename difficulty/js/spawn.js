@@ -259,8 +259,19 @@ const spawn = {
         }, 2000); //add in a delay in case the level gets flipped left right
 
         me.isBoss = true;
-
-
+		me.onDmg = function(blt) {
+			if (Math.random() > 0.333 && !this.cheatedDeath) return;
+			bullet.forEach((x,i)=>{
+				if (x==blt) {
+					spawn.blockMob(x.position.x, x.position.y, x, 0)
+					let who = mob[mob.length-1]
+					who.fill = "#00aa00"
+					Body.setVelocity(who, Vector.mult(Vector.normalise(Vector.sub(m.pos, this.position)), 20))
+					Matter.Composite.remove(engine.world, bullet[i]);
+					bullet.splice(i, 1)
+				}
+			})
+		}
         me.frictionAir = 0.01;
         me.memory = Infinity;
         me.hasRunDeathScript = false
@@ -391,12 +402,19 @@ const spawn = {
                 }
             }
         };
-        me.onDamage = function() {};
+        me.onDamage = function() {
+			if (this.health < 0.05 && !this.cheatedDeath) {
+				this.cheatedDeath = true
+				this.health = 1
+				this.damageReduction = 0.03
+			}
+		};
         me.cycle = 420;
         me.endCycle = 780;
         me.totalCycles = 0
         me.mode = 0;
-        me.damageReduction = 0.25
+        me.damageReduction = 0.1
+		me.cheatedDeath = false;
         me.do = function() {
             // this.armor();
             // Matter.Body.setPosition(this, {
@@ -412,7 +430,19 @@ const spawn = {
             if (!m.isBodiesAsleep) this.cycle++; //switch modes÷  if time isn't paused
             this.totalCycles++;
             // if (!m.isBodiesAsleep) {
-            if (this.health > 0.25) {
+			if (this.cheatedDeath) {
+				this.health -= 0.000333
+				if ((simulation.cycle % 10) == 0) this.fill = randomColor()
+				if (this.mode !== 4) {
+					this.eventHorizon = 1050
+					this.spawnInterval = 300
+					this.rotateVelocity = 0.0025 * (player.position.x > this.position.x ? 1 : -1) //rotate so that the player can get away                    
+					// if (!this.isShielded) spawn.shield(this, x, y, 1); //regen shield here ?
+					this.modeDo = this.modeAll
+					this.mode = 4
+					Matter.Body.setDensity(me, 10 * density); 
+				}
+			} else if (this.health > 0.25) {
                 if (this.cycle > this.endCycle) {
                     this.cycle = 0;
                     this.mode++
@@ -480,6 +510,7 @@ const spawn = {
                         x: this.velocity.x + velocity.x,
                         y: this.velocity.y + velocity.y
                     });
+					if (i==0) Body.setVelocity(mob[mob.length-1], Vector.mult(Vector.normalise(Vector.sub(m.pos, this.position)), 10))
                 }
                 if (!(this.cycle % 2 * this.spawnInterval) && !m.isBodiesAsleep && mob.length < 40) {
                     const len = (this.totalCycles / 600 + simulation.difficulty / 2 - 30) / 15
@@ -518,8 +549,8 @@ const spawn = {
             //when player is inside event horizon
             if (Vector.magnitude(Vector.sub(this.position, player.position)) < eventHorizon) {
                 if (m.immuneCycle < m.cycle) {
-                    if (m.energy > 0) m.energy -= 0.01
-                    if (m.energy < 0.15 && m.immuneCycle < m.cycle) m.damage(0.0004 * simulation.dmgScale);
+                    if (m.energy > 0) m.energy -= 0.03
+                    if (m.energy < 0.15 && m.immuneCycle < m.cycle) m.damage(0.0014 * simulation.dmgScale);
                 }
                 const angle = Math.atan2(player.position.y - this.position.y, player.position.x - this.position.x);
                 player.force.x -= 0.0017 * Math.cos(angle) * player.mass * (m.onGround ? 1.7 : 1);
@@ -698,6 +729,19 @@ const spawn = {
         me.isGrouper = true;
         me.seeAtDistance2 = 600 * 600
         me.seePlayerFreq = Math.floor(50 + 50 * Math.random())
+		me.onDmg = function(blt) {
+			if (Math.random() <0.333)
+			bullet.forEach((x,i)=>{
+				if (x==blt) {
+					spawn.blockMob(x.position.x, x.position.y, x, 0)
+					let who = mob[mob.length-1]
+					who.fill = "#00aa00"
+					Body.setVelocity(who, Vector.mult(Vector.normalise(Vector.sub(m.pos, this.position)), 10))
+					Matter.Composite.remove(engine.world, bullet[i]);
+					bullet.splice(i, 1)
+				}
+			})
+		}
         me.do = function() {
             this.gravity();
             this.checkStatus();
@@ -723,9 +767,6 @@ const spawn = {
                         }
                     }
                 }*/
-                ctx.strokeStyle = "#0ff";
-                ctx.lineWidth = 1;
-                ctx.stroke();
             }
         }
     },
@@ -743,12 +784,24 @@ const spawn = {
             powerUps.spawnBossPowerUp(this.position.x, this.position.y);
             for (const who of mob) {
                 if (who.isNecroMob) { //blockMobs leave their body, and die
-                    who.leaveBody = true
+                    if (who.mass > 1) who.leaveBody = true
                     who.damage(Infinity)
                 }
             }
         }
         me.target = player; // the target to lock on. Usually a block, but will be the player under certain conditions
+		me.onDmg = function(blt) {
+			bullet.forEach((x,i)=>{
+				if (x==blt) {
+					spawn.blockMob(x.position.x, x.position.y, x, 0)
+					let who = mob[mob.length-1]
+					who.fill = "#00aa00"
+					Body.setVelocity(who, Vector.mult(Vector.normalise(Vector.sub(m.pos, this.position)), 20))
+					Matter.Composite.remove(engine.world, bullet[i]);
+					bullet.splice(i, 1)
+				}
+			})
+		}
         me.do = function() {
             this.checkStatus();
             this.seePlayerCheck();
@@ -2943,7 +2996,7 @@ const spawn = {
         me.frictionAir = 0.01;
         me.g = 0.0002; //required if using this.gravity
         me.stroke = "transparent"; //used for drawSneaker
-        me.alpha = 1; //used in drawSneaker
+        me.alpha = 0; //used in drawSneaker
         // me.leaveBody = false;
         me.canTouchPlayer = false; //used in drawSneaker
         me.collisionFilter.mask = cat.map | cat.body | cat.bullet | cat.mob //can't touch player

@@ -178,6 +178,7 @@ function collisionChecks(event) {
                             if (tech.isCrit && mob[k].isStunned) dmg *= 4
                             // console.log(dmg)
                             mob[k].damage(dmg);
+							if (mob[k].onDmg && mob[k].alive) mob[k].onDmg(obj)
                             if (mob[k].alive) mob[k].foundPlayer();
                             simulation.drawList.push({ //add dmg to draw queue
                                 x: pairs[i].activeContacts[0].vertex.x,
